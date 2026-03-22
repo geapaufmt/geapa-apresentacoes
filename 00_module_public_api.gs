@@ -115,3 +115,7 @@ function apresentacoes_processarCobrancasArquivo(dryRun) {
 function apresentacoes_processarInboxArquivo() {
   return apresentacoes_processarInboxArquivo_();
 }
+
+function apresentacoes_autofillIdentificacaoPendentes() {
+  return apresentacoes_autofillPendenciasGerais_();
+}

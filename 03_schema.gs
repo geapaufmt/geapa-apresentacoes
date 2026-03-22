@@ -15,6 +15,8 @@ var APRESENTACOES_SCHEMA = Object.freeze({
     EIXO_PRINCIPAL: 'Eixo temático principal',
     EIXO_SECUNDARIO: 'Eixo Temático Secundário',
     STATUS_APRESENTACAO: 'Status da apresentação',
+    EMAIL_AGENDAMENTO_ENVIADO: 'E-mail de agendamento enviado?',
+    DT_HR_EMAIL_AGENDAMENTO: 'Data/hora e-mail de agendamento',
     NOTIFICACAO_SECRETARIOS_ENVIADA: 'Notificação aos secretários enviada?',
     DT_HR_NOTIFICACAO_SECRETARIOS: 'Data/hora notificação aos secretários',
     LEMBRETE_4_DIAS_ENVIADO: 'Lembrete (4 dias antes) enviado?',

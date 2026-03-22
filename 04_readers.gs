@@ -77,6 +77,8 @@ function apresentacoes_normalizarLinhaProcessamento_(row, headerMap, rowNumber) 
     eixoPrincipal: apresentacoes_toStr_(apresentacoes_getCellByHeader_(row, headerMap, S.EIXO_PRINCIPAL)),
     eixoSecundario: apresentacoes_toStr_(apresentacoes_getCellByHeader_(row, headerMap, S.EIXO_SECUNDARIO)),
     status: apresentacoes_toStr_(apresentacoes_getCellByHeader_(row, headerMap, S.STATUS_APRESENTACAO)),
+    emailAgendamentoEnviado: apresentacoes_toStr_(apresentacoes_getCellByHeader_(row, headerMap, S.EMAIL_AGENDAMENTO_ENVIADO)),
+    dtHrEmailAgendamento: apresentacoes_getCellByHeader_(row, headerMap, S.DT_HR_EMAIL_AGENDAMENTO),
     notificacaoSecretariosEnviada: apresentacoes_toStr_(apresentacoes_getCellByHeader_(row, headerMap, S.NOTIFICACAO_SECRETARIOS_ENVIADA)),
     dtHrNotificacaoSecretarios: apresentacoes_getCellByHeader_(row, headerMap, S.DT_HR_NOTIFICACAO_SECRETARIOS),
     lembrete4DiasEnviado: apresentacoes_toStr_(apresentacoes_getCellByHeader_(row, headerMap, S.LEMBRETE_4_DIAS_ENVIADO)),

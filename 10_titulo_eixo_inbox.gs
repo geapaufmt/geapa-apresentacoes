@@ -186,6 +186,7 @@ function apresentacoes_encontrarLinhaPendentePorEmail_(senderEmail) {
 
 /**
  * Verifica se uma mensagem parece conter resposta de título/eixo.
+ *
  * @param {GoogleAppsScript.Gmail.GmailMessage} message
  * @return {boolean}
  */
@@ -193,10 +194,13 @@ function apresentacoes_mensagemPareceRespostaTituloEixo_(message) {
   var body = message.getPlainBody() || '';
   var bodyNorm = apresentacoes_normalizarTexto_(body);
 
-  return (
-    bodyNorm.indexOf('titulo:') !== -1 &&
-    bodyNorm.indexOf('eixo:') !== -1
-  );
+  var temTitulo = bodyNorm.indexOf('titulo:') !== -1;
+  var temEixo =
+    bodyNorm.indexOf('eixo:') !== -1 ||
+    bodyNorm.indexOf('eixo 1:') !== -1 ||
+    bodyNorm.indexOf('eixo1:') !== -1;
+
+  return temTitulo && temEixo;
 }
 
 /**
@@ -270,6 +274,11 @@ function apresentacoes_interpretarEixo_(raw) {
 
 /**
  * Extrai dados estruturados do corpo da mensagem.
+ * Aceita:
+ * - TÍTULO / TITULO
+ * - EIXO / EIXO 1 / EIXO1
+ * - EIXO 2 / EIXO2
+ *
  * @param {GoogleAppsScript.Gmail.GmailMessage} message
  * @return {Object}
  */
@@ -280,7 +289,10 @@ function apresentacoes_extrairDadosTituloEixoDaMensagem_(message) {
     apresentacoes_extrairCampoDoCorpo_(body, 'TÍTULO', true) ||
     apresentacoes_extrairCampoDoCorpo_(body, 'TITULO', true);
 
-  var eixoBruto = apresentacoes_extrairCampoDoCorpo_(body, 'EIXO', true);
+  var eixoBruto =
+    apresentacoes_extrairCampoDoCorpo_(body, 'EIXO', true) ||
+    apresentacoes_extrairCampoDoCorpo_(body, 'EIXO 1', true) ||
+    apresentacoes_extrairCampoDoCorpo_(body, 'EIXO1', true);
 
   var eixo2Bruto =
     apresentacoes_extrairCampoDoCorpo_(body, 'EIXO 2', true) ||

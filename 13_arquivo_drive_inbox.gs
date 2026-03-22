@@ -194,7 +194,7 @@ function apresentacoes_anexoEhArquivoApresentacao_(att) {
  */
 function apresentacoes_buscarThreadsArquivo_() {
   var query =
-    'in:anywhere newer_than:30d subject:"GEAPA | Envio do arquivo da apresentação"';
+    'newer_than:30d -in:trash -in:spam subject:"GEAPA | Envio do arquivo da apresentação em PDF"';
 
   return GmailApp.search(query, 0, 50);
 }
@@ -207,23 +207,24 @@ function apresentacoes_buscarThreadsArquivo_() {
  */
 function apresentacoes_encontrarLinhaPendenteArquivoPorEmail_(senderEmail) {
   var emailNorm = apresentacoes_normalizarTexto_(senderEmail);
+  var agora = new Date();
 
   var candidatos = apresentacoes_listarApresentacoesInternas_().filter(function(item) {
-    return (
-      apresentacoes_normalizarTexto_(item.email) === emailNorm &&
-      !apresentacoes_arquivoJaRecebido_(item)
-    );
+    if (apresentacoes_normalizarTexto_(item.email) !== emailNorm) return false;
+    if (apresentacoes_arquivoJaRecebido_(item)) return false;
+    if (!item.dtHrSolicitacaoArquivo) return false;
+
+    var dtSolic = new Date(item.dtHrSolicitacaoArquivo);
+    if (isNaN(dtSolic.getTime())) return false;
+
+    return dtSolic.getTime() <= agora.getTime();
   });
 
   if (!candidatos.length) return null;
 
   candidatos.sort(function(a, b) {
-    var da = apresentacoes_getDataHoraApresentacao_(a);
-    var db = apresentacoes_getDataHoraApresentacao_(b);
-
-    if (!da && !db) return 0;
-    if (!da) return 1;
-    if (!db) return -1;
+    var da = new Date(a.dtHrSolicitacaoArquivo);
+    var db = new Date(b.dtHrSolicitacaoArquivo);
 
     return db.getTime() - da.getTime();
   });
@@ -271,6 +272,12 @@ function apresentacoes_marcarArquivoRecebido_(rowNumber, folderUrl) {
 /**
  * Processa uma thread de arquivo.
  *
+ * Regras importantes:
+ * - só considera mensagens do apresentador correto
+ * - só considera mensagens posteriores à solicitação atual do arquivo
+ * - só aceita PDF
+ * - se houver anexo, mas não PDF, responde avisando
+ *
  * @param {GoogleAppsScript.Gmail.GmailThread} thread
  * @return {Object}
  */
@@ -287,9 +294,17 @@ function apresentacoes_processarThreadArquivo_(thread) {
 
     if (!item) continue;
 
+    // Blindagem importante:
+    // ignora mensagens anteriores à solicitação atual do arquivo
+    var dtSolic = item.dtHrSolicitacaoArquivo ? new Date(item.dtHrSolicitacaoArquivo) : null;
+    if (dtSolic && !isNaN(dtSolic.getTime()) && msg.getDate().getTime() < dtSolic.getTime()) {
+      continue;
+    }
+
     var anexos = msg.getAttachments({ includeInlineImages: false, includeAttachments: true }) || [];
     var anexosValidos = anexos.filter(apresentacoes_anexoEhArquivoApresentacao_);
 
+    // Caso válido: há PDF
     if (anexosValidos.length > 0) {
       var pastaFinal = apresentacoes_getOuCriarPastaFinalApresentacao_(item);
       var arquivosSalvos = [];
@@ -316,7 +331,12 @@ function apresentacoes_processarThreadArquivo_(thread) {
       });
 
       apresentacoes_marcarArquivoRecebido_(item.rowNumber, pastaFinal.getUrl());
-      apresentacoes_sincronizarHistorico_();
+
+      // Se a sync do histórico existir no teu projeto, mantém:
+      if (typeof apresentacoes_sincronizarHistorico_ === 'function') {
+        apresentacoes_sincronizarHistorico_();
+      }
+
       apresentacoes_responderArquivoRecebidoComSucesso_(msg, item);
       apresentacoes_marcarThreadArquivoProcessada_(thread);
 
@@ -333,6 +353,7 @@ function apresentacoes_processarThreadArquivo_(thread) {
       };
     }
 
+    // Caso inválido: há anexo, mas não há PDF
     if (apresentacoes_mensagemTemSomenteAnexoInvalido_(msg)) {
       apresentacoes_responderArquivoInvalido_(msg, item);
 
@@ -558,8 +579,7 @@ function apresentacoes_responderArquivoInvalido_(msg, item) {
     subject,
     'Seu cliente de e-mail não suporta HTML.',
     {
-      htmlBody: htmlBody,
-      replyTo: Session.getActiveUser().getEmail()
+      htmlBody: htmlBody
     }
   );
 }
@@ -603,8 +623,7 @@ function apresentacoes_responderArquivoRecebidoComSucesso_(msg, item) {
     subject,
     'Seu cliente de e-mail não suporta HTML.',
     {
-      htmlBody: htmlBody,
-      replyTo: Session.getActiveUser().getEmail()
+      htmlBody: htmlBody
     }
   );
 }

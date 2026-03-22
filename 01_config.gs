@@ -13,6 +13,7 @@ var APRESENTACOES_CFG = Object.freeze({
   },
 
   STATUS_APRESENTACAO: {
+    AGENDADA: 'Agendada',
     CONFIRMADA: 'Confirmada',
     APROVADA: 'Aprovada'
   },

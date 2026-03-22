@@ -181,6 +181,36 @@ function test_apresentacoes_forcarCobrancaArquivo_real() {
   Logger.log(JSON.stringify(res, null, 2));
 }
 
+function test_apresentacoes_debugInboxTituloEixo() {
+  var threads = apresentacoes_buscarThreadsTituloEixo_();
+
+  var out = threads.map(function(thread) {
+    var msgs = thread.getMessages();
+
+    return {
+      subject: thread.getFirstMessageSubject(),
+      jaProcessada: apresentacoes_threadJaProcessadaTituloEixo_(thread),
+      messages: msgs.map(function(msg) {
+        var from = apresentacoes_extrairEmailSimples_(msg.getFrom());
+        var body = msg.getPlainBody() || '';
+        var dados = apresentacoes_extrairDadosTituloEixoDaMensagem_(msg);
+
+        return {
+          from: from,
+          date: msg.getDate(),
+          pareceResposta: apresentacoes_mensagemPareceRespostaTituloEixo_(msg),
+          tituloExtraido: dados.titulo,
+          eixoExtraido: dados.eixo,
+          eixo2Extraido: dados.eixo2,
+          bodyPreview: body.substring(0, 500)
+        };
+      })
+    };
+  });
+
+  Logger.log(JSON.stringify(out, null, 2));
+}
+
 function test_apresentacoes_processarInboxArquivo() {
   var res = apresentacoes_processarInboxArquivo_();
   Logger.log(JSON.stringify(res, null, 2));
@@ -211,3 +241,42 @@ function test_apresentacoes_processarFotosPendentesPorLinha() {
   var res = apresentacoes_processarFotosPendentesPorLinha_(rowNumber);
   Logger.log(JSON.stringify(res, null, 2));
 }
+
+function test_apresentacoes_preencherIdentificacaoPendentes() {
+  var res = apresentacoes_preencherIdentificacaoPendentes_();
+  Logger.log(JSON.stringify(res, null, 2));
+}
+
+function test_apresentacoes_preencherIdentificacaoLinha() {
+  var rowNumber = 10; // ajuste conforme necessário
+  var res = apresentacoes_preencherIdentificacaoLinha_(rowNumber);
+  Logger.log(JSON.stringify(res, null, 2));
+}
+
+function test_apresentacoes_preencherSemestresPendentes() {
+  var res = apresentacoes_preencherSemestresPendentes_();
+  Logger.log(JSON.stringify(res, null, 2));
+}
+
+function test_apresentacoes_preencherSemestreLinha() {
+  var rowNumber = 10; // ajuste
+  var res = apresentacoes_preencherSemestreLinha_(rowNumber);
+  Logger.log(JSON.stringify(res, null, 2));
+}
+
+function test_apresentacoes_autofillPendenciasGerais() {
+  var res = apresentacoes_autofillPendenciasGerais_();
+  Logger.log(JSON.stringify(res, null, 2));
+}
+
+function test_apresentacoes_processarEmailsAgendamentoPendentes() {
+  var res = apresentacoes_processarEmailsAgendamentoPendentes_();
+  Logger.log(JSON.stringify(res, null, 2));
+}
+
+function test_apresentacoes_processarEmailAgendamentoLinha() {
+  var rowNumber = 10; // ajuste
+  var res = apresentacoes_processarEmailAgendamentoLinha_(rowNumber);
+  Logger.log(JSON.stringify(res, null, 2));
+}
+
