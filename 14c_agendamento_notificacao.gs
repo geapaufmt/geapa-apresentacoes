@@ -148,12 +148,15 @@ function apresentacoes_processarEmailAgendamentoLinha_(rowNumber) {
     };
   }
 
+  var icsBlob = apresentacoes_gerarICSAgendamento_(item);
+
   GmailApp.sendEmail(
     item.email,
     apresentacoes_buildAssuntoAgendamento_(item),
     'Seu cliente de e-mail não suporta HTML.',
     {
-      htmlBody: apresentacoes_buildHtmlAgendamento_(item)
+      htmlBody: apresentacoes_buildHtmlAgendamento_(item),
+      attachments: icsBlob ? [icsBlob] : []
     }
   );
 
@@ -198,12 +201,15 @@ function apresentacoes_processarEmailsAgendamentoPendentes_() {
         return;
       }
 
+  var icsBlob = apresentacoes_gerarICSAgendamento_(item);
+
       GmailApp.sendEmail(
         item.email,
         apresentacoes_buildAssuntoAgendamento_(item),
         'Seu cliente de e-mail não suporta HTML.',
         {
-          htmlBody: apresentacoes_buildHtmlAgendamento_(item)
+          htmlBody: apresentacoes_buildHtmlAgendamento_(item),
+          attachments: icsBlob ? [icsBlob] : []
         }
       );
 
@@ -233,4 +239,73 @@ function apresentacoes_processarEmailsAgendamentoPendentes_() {
     counters: counters,
     details: details.slice(0, 30)
   };
+}
+
+/**
+ * Gera arquivo .ics da apresentação agendada.
+ *
+ * @param {Object} item
+ * @return {GoogleAppsScript.Base.Blob|null}
+ */
+function apresentacoes_gerarICSAgendamento_(item) {
+  if (!item || !item.dataApresentacao) return null;
+
+  var dataAp = item.dataApresentacao instanceof Date
+    ? item.dataApresentacao
+    : new Date(item.dataApresentacao);
+
+  if (!(dataAp instanceof Date) || isNaN(dataAp.getTime())) return null;
+
+  var hora = 18;
+  var minuto = 30;
+
+  if (item.horario) {
+    var horarioStr = String(item.horario).trim();
+    var match = horarioStr.match(/^(\d{1,2})(?:\s*[hH:]\s*(\d{1,2}))?$/);
+    if (match) {
+      hora = parseInt(match[1], 10);
+      minuto = match[2] !== undefined ? parseInt(match[2], 10) : 0;
+    }
+  }
+
+  var tz = Session.getScriptTimeZone();
+
+  var inicio = new Date(
+    dataAp.getFullYear(),
+    dataAp.getMonth(),
+    dataAp.getDate(),
+    hora,
+    minuto,
+    0
+  );
+
+  var fim = new Date(inicio.getTime() + 2 * 60 * 60 * 1000);
+
+  var dtStart = Utilities.formatDate(inicio, tz, "yyyyMMdd'T'HHmmss");
+  var dtEnd = Utilities.formatDate(fim, tz, "yyyyMMdd'T'HHmmss");
+
+  var resumo = 'GEAPA | Apresentação - ' + (item.nome || 'Membro');
+  var descricao = [
+    'Apresentação agendada no GEAPA.',
+    'Membro: ' + (item.nome || ''),
+    'Semestre: ' + (item.semestre || ''),
+    'Título: ' + (item.titulo || 'A definir')
+  ].join('\\n');
+
+  var localStr = item.local || '';
+
+  var conteudo =
+    'BEGIN:VCALENDAR\r\n' +
+    'VERSION:2.0\r\n' +
+    'PRODID:-//GEAPA//Apresentacoes//PT-BR\r\n' +
+    'BEGIN:VEVENT\r\n' +
+    'SUMMARY:' + resumo + '\r\n' +
+    'DTSTART:' + dtStart + '\r\n' +
+    'DTEND:' + dtEnd + '\r\n' +
+    'DESCRIPTION:' + descricao + '\r\n' +
+    'LOCATION:' + localStr + '\r\n' +
+    'END:VEVENT\r\n' +
+    'END:VCALENDAR';
+
+  return Utilities.newBlob(conteudo, 'text/calendar', 'agendamento-apresentacao-geapa.ics');
 }

@@ -13,7 +13,7 @@
 /**
  * Preenche automaticamente identificação pendente.
  */
-function apresentacoes_autofillIdentificacaoPendentes() {
+function trigger_apresentacoes_autofillIdentificacaoPendentes() {
   return apresentacoes_autofillPendenciasGerais_();
 }
 
@@ -182,7 +182,7 @@ function apresentacoes_instalarTriggers() {
     .timeBased()
     .everyMinutes(15)
     .create();
-  criados.push('trigger_apresentacoes_autofillIdentificacaoPendentes');
+  criados.push('trigger_apresentacoes_emailsAgendamento');
 
   ScriptApp.newTrigger('trigger_apresentacoes_cobrancaTituloEixo')
     .timeBased()
