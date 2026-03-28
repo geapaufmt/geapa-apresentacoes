@@ -150,15 +150,13 @@ function apresentacoes_processarEmailAgendamentoLinha_(rowNumber) {
 
   var icsBlob = apresentacoes_gerarICSAgendamento_(item);
 
-  GmailApp.sendEmail(
-    item.email,
-    apresentacoes_buildAssuntoAgendamento_(item),
-    'Seu cliente de e-mail não suporta HTML.',
-    {
-      htmlBody: apresentacoes_buildHtmlAgendamento_(item),
-      attachments: icsBlob ? [icsBlob] : []
-    }
-  );
+  GEAPA_CORE.coreSendHtmlEmail({
+    to: item.email,
+    subject: apresentacoes_buildAssuntoAgendamento_(item),
+    body: 'Seu cliente de e-mail nao suporta HTML.',
+    htmlBody: apresentacoes_buildHtmlAgendamento_(item),
+    attachments: icsBlob ? [icsBlob] : []
+  });
 
   apresentacoes_marcarEmailAgendamentoEnviado_(rowNumber);
 
@@ -203,15 +201,13 @@ function apresentacoes_processarEmailsAgendamentoPendentes_() {
 
   var icsBlob = apresentacoes_gerarICSAgendamento_(item);
 
-      GmailApp.sendEmail(
-        item.email,
-        apresentacoes_buildAssuntoAgendamento_(item),
-        'Seu cliente de e-mail não suporta HTML.',
-        {
-          htmlBody: apresentacoes_buildHtmlAgendamento_(item),
-          attachments: icsBlob ? [icsBlob] : []
-        }
-      );
+      GEAPA_CORE.coreSendHtmlEmail({
+        to: item.email,
+        subject: apresentacoes_buildAssuntoAgendamento_(item),
+        body: 'Seu cliente de e-mail nao suporta HTML.',
+        htmlBody: apresentacoes_buildHtmlAgendamento_(item),
+        attachments: icsBlob ? [icsBlob] : []
+      });
 
       apresentacoes_marcarEmailAgendamentoEnviado_(item.rowNumber);
 

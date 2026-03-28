@@ -7,6 +7,32 @@
  * @param {Object} item
  * @return {boolean}
  */
+function apresentacoes_toStartOfDay_(value) {
+  if (!value) return null;
+
+  var d = value instanceof Date ? value : new Date(value);
+  if (!(d instanceof Date) || isNaN(d.getTime())) return null;
+
+  return GEAPA_CORE.coreStartOfDay(d);
+}
+
+function apresentacoes_formatarDataApresentacaoTexto_(value) {
+  var d = value instanceof Date ? value : new Date(value);
+  if (!(d instanceof Date) || isNaN(d.getTime())) {
+    return String(value || '').trim();
+  }
+
+  return GEAPA_CORE.coreFormatDate(d, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+}
+
+function apresentacoes_normalizarComparacao_(value) {
+  return GEAPA_CORE.coreNormalizeText(value, {
+    removeAccents: true,
+    collapseWhitespace: true,
+    caseMode: 'lower'
+  }).replace(/[–—-]/g, ' ');
+}
+
 function apresentacoes_temIdentificacaoMinima_(item) {
   return !!(item.nome && item.email && item.semestre);
 }
@@ -30,7 +56,7 @@ function apresentacoes_temTituloEixoConfirmados_(item) {
  * @return {boolean}
  */
 function apresentacoes_estaAprovada_(item) {
-  return item.status === APRESENTACOES_CFG.STATUS_APROVADA;
+  return String(item.status || '').trim() === APRESENTACOES_CFG.STATUS_APRESENTACAO.APROVADA;
 }
 
 /**

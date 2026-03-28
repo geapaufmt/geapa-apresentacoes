@@ -18,8 +18,8 @@
  * @param {Object} item
  * @return {boolean}
  */
-function apresentacoes_estaAprovada_(item) {
-  return String(item.status || '').trim() === APRESENTACOES_CFG.STATUS_APRESENTACAO.APROVADA;
+function apresentacoes_estaAprovadaPosAprovacao_(item) {
+  return apresentacoes_estaAprovada_(item);
 }
 
 /**
@@ -27,12 +27,8 @@ function apresentacoes_estaAprovada_(item) {
  * @param {Object} item
  * @return {boolean}
  */
-function apresentacoes_temTituloEixoConfirmados_(item) {
-  return !!(
-    item.titulo &&
-    item.eixoPrincipal &&
-    item.dtHrConfirmacaoTituloEixo
-  );
+function apresentacoes_temTituloEixoConfirmadosPosAprovacao_(item) {
+  return apresentacoes_temTituloEixoConfirmados_(item);
 }
 
 /**
@@ -42,8 +38,8 @@ function apresentacoes_temTituloEixoConfirmados_(item) {
  */
 function apresentacoes_deveEnviarConviteProfessores_(item) {
   return (
-    apresentacoes_estaAprovada_(item) &&
-    apresentacoes_temTituloEixoConfirmados_(item) &&
+    apresentacoes_estaAprovadaPosAprovacao_(item) &&
+    apresentacoes_temTituloEixoConfirmadosPosAprovacao_(item) &&
     String(item.conviteProfessoresEnviado || '').trim() !== APRESENTACOES_CFG.VALORES_SIM_NAO.SIM
   );
 }
@@ -55,8 +51,8 @@ function apresentacoes_deveEnviarConviteProfessores_(item) {
  */
 function apresentacoes_deveEnviarLembreteMembros_(item) {
   return (
-    apresentacoes_estaAprovada_(item) &&
-    apresentacoes_temTituloEixoConfirmados_(item) &&
+    apresentacoes_estaAprovadaPosAprovacao_(item) &&
+    apresentacoes_temTituloEixoConfirmadosPosAprovacao_(item) &&
     String(item.lembreteMembrosEnviado || '').trim() !== APRESENTACOES_CFG.VALORES_SIM_NAO.SIM
   );
 }
@@ -86,18 +82,8 @@ function apresentacoes_listarElegiveisLembreteMembros_() {
  * @param {*} value
  * @return {string}
  */
-function apresentacoes_formatarDataApresentacaoTexto_(value) {
-  if (!value) return '';
-
-  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
-    return Utilities.formatDate(
-      value,
-      Session.getScriptTimeZone(),
-      'dd/MM/yyyy'
-    );
-  }
-
-  return String(value).trim();
+function apresentacoes_formatarDataApresentacaoTextoPosAprovacao_(value) {
+  return apresentacoes_formatarDataApresentacaoTexto_(value);
 }
 
 /**
@@ -105,7 +91,7 @@ function apresentacoes_formatarDataApresentacaoTexto_(value) {
  * @param {*} value
  * @return {string}
  */
-function apresentacoes_normalizarComparacao_(value) {
+function apresentacoes_normalizarComparacaoLocal_(value) {
   return String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -216,8 +202,8 @@ function apresentacoes_getProfessoresPorEixos_(item) {
   var chavesAlvo = [];
 
   eixosAlvo.forEach(function(eixo) {
-    var completo = apresentacoes_normalizarComparacao_(eixo);
-    var descricao = apresentacoes_normalizarComparacao_(apresentacoes_extrairDescricaoEixo_(eixo));
+    var completo = apresentacoes_normalizarComparacaoLocal_(eixo);
+    var descricao = apresentacoes_normalizarComparacaoLocal_(apresentacoes_extrairDescricaoEixo_(eixo));
 
     if (completo) chavesAlvo.push(completo);
     if (descricao && chavesAlvo.indexOf(descricao) === -1) chavesAlvo.push(descricao);
@@ -225,8 +211,8 @@ function apresentacoes_getProfessoresPorEixos_(item) {
 
   return professores.filter(function(prof) {
     var candidatos = [
-      apresentacoes_normalizarComparacao_(prof.eixo1),
-      apresentacoes_normalizarComparacao_(prof.eixo2)
+      apresentacoes_normalizarComparacaoLocal_(prof.eixo1),
+      apresentacoes_normalizarComparacaoLocal_(prof.eixo2)
     ].filter(Boolean);
 
     var match = candidatos.some(function(e) {
@@ -300,7 +286,7 @@ function apresentacoes_listarMembrosAtivos_() {
       status: String(row[colStatus] || '').trim()
     };
   }).filter(function(item) {
-    return item.email && apresentacoes_normalizarComparacao_(item.status) === 'ativo';
+    return item.email && apresentacoes_normalizarComparacaoLocal_(item.status) === 'ativo';
   });
 }
 
@@ -310,7 +296,7 @@ function apresentacoes_listarMembrosAtivos_() {
  * @return {string}
  */
 function apresentacoes_buildAssuntoConviteProfessores_(item) {
-  var dataTxt = apresentacoes_formatarDataApresentacaoTexto_(item.dataApresentacao);
+  var dataTxt = apresentacoes_formatarDataApresentacaoTextoPosAprovacao_(item.dataApresentacao);
   return 'GEAPA | Convite para apresentação' + (dataTxt ? ' - ' + dataTxt : '');
 }
 
@@ -321,7 +307,7 @@ function apresentacoes_buildAssuntoConviteProfessores_(item) {
  * @return {string}
  */
 function apresentacoes_buildHtmlConviteProfessores_(item, prof) {
-  var dataFormatada = apresentacoes_formatarDataApresentacaoTexto_(item.dataApresentacao);
+  var dataFormatada = apresentacoes_formatarDataApresentacaoTextoPosAprovacao_(item.dataApresentacao);
   var nomeMembro = item.nome || 'acadêmico(a) do GEAPA';
   var titulo = item.titulo || '';
   var eixos = [item.eixoPrincipal, item.eixoSecundario].filter(Boolean);
@@ -357,7 +343,7 @@ function apresentacoes_buildHtmlConviteProfessores_(item, prof) {
  * @return {string}
  */
 function apresentacoes_buildAssuntoLembreteMembros_(item) {
-  var dataTxt = apresentacoes_formatarDataApresentacaoTexto_(item.dataApresentacao);
+  var dataTxt = apresentacoes_formatarDataApresentacaoTextoPosAprovacao_(item.dataApresentacao);
   return 'GEAPA | Lembrete de apresentação' + (dataTxt ? ' - ' + dataTxt : '');
 }
 
@@ -379,7 +365,7 @@ function apresentacoes_toTitleCase_(nome) {
  * @return {string}
  */
 function apresentacoes_buildHtmlLembreteMembros_(item, membro) {
-  var dataFormatada = apresentacoes_formatarDataApresentacaoTexto_(item.dataApresentacao);
+  var dataFormatada = apresentacoes_formatarDataApresentacaoTextoPosAprovacao_(item.dataApresentacao);
   var nomePalestrante = item.nome || 'membro do GEAPA';
   var primeiroNomeDestinatario = apresentacoes_getPrimeiroNome_(membro && membro.nome ? membro.nome : '');
   primeiroNomeDestinatario = apresentacoes_toTitleCase_(primeiroNomeDestinatario);
@@ -473,15 +459,13 @@ function apresentacoes_enviarConviteProfessoresItem_(item, dryRun) {
     professores.forEach(function(prof) {
       var htmlBody = apresentacoes_buildHtmlConviteProfessores_(item, prof);
 
-      GmailApp.sendEmail(
-        prof.email,
-        apresentacoes_buildAssuntoConviteProfessores_(item),
-        'Seu cliente de e-mail não suporta HTML.',
-        {
-          htmlBody: htmlBody,
-          attachments: ics ? [ics] : []
-        }
-      );
+      GEAPA_CORE.coreSendHtmlEmail({
+        to: prof.email,
+        subject: apresentacoes_buildAssuntoConviteProfessores_(item),
+        body: 'Seu cliente de e-mail nao suporta HTML.',
+        htmlBody: htmlBody,
+        attachments: ics ? [ics] : []
+      });
     });
 
     apresentacoes_marcarConviteProfessoresEnviado_(item.rowNumber);
@@ -526,15 +510,13 @@ function apresentacoes_enviarLembreteMembrosItem_(item, dryRun) {
     membros.forEach(function(membro) {
       var htmlBody = apresentacoes_buildHtmlLembreteMembros_(item, membro);
 
-      GmailApp.sendEmail(
-        membro.email,
-        apresentacoes_buildAssuntoLembreteMembros_(item),
-        'Seu cliente de e-mail não suporta HTML.',
-        {
-          htmlBody: htmlBody,
-          attachments: ics ? [ics] : []
-        }
-      );
+      GEAPA_CORE.coreSendHtmlEmail({
+        to: membro.email,
+        subject: apresentacoes_buildAssuntoLembreteMembros_(item),
+        body: 'Seu cliente de e-mail nao suporta HTML.',
+        htmlBody: htmlBody,
+        attachments: ics ? [ics] : []
+      });
     });
 
     apresentacoes_marcarLembreteMembrosEnviado_(item.rowNumber);

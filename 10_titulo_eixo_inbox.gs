@@ -19,12 +19,7 @@
  * @return {GoogleAppsScript.Gmail.GmailLabel}
  */
 function apresentacoes_getLabelTituloEixoProcessado_() {
-  var name = 'GEAPA/TituloEixoProcessado';
-  var label = GmailApp.getUserLabelByName(name);
-  if (!label) {
-    label = GmailApp.createLabel(name);
-  }
-  return label;
+  return GEAPA_CORE.coreGetOrCreateLabel('GEAPA/TituloEixoProcessado');
 }
 
 /**
@@ -33,15 +28,7 @@ function apresentacoes_getLabelTituloEixoProcessado_() {
  * @return {boolean}
  */
 function apresentacoes_threadJaProcessadaTituloEixo_(thread) {
-  var target = 'GEAPA/TituloEixoProcessado';
-  var labels = thread.getLabels();
-
-  for (var i = 0; i < labels.length; i++) {
-    if (labels[i].getName() === target) {
-      return true;
-    }
-  }
-  return false;
+  return GEAPA_CORE.coreThreadHasLabel(thread, 'GEAPA/TituloEixoProcessado');
 }
 
 /**
@@ -51,10 +38,7 @@ function apresentacoes_threadJaProcessadaTituloEixo_(thread) {
  * @return {string}
  */
 function apresentacoes_extrairEmailSimples_(text) {
-  if (!text) return '';
-  var m = String(text).match(/<([^>]+)>/);
-  if (m && m[1]) return String(m[1]).trim().toLowerCase();
-  return String(text).trim().toLowerCase();
+  return GEAPA_CORE.coreExtractEmailAddress(text);
 }
 
 /**
@@ -74,12 +58,12 @@ function apresentacoes_extrairCampoDoCorpo_(body, fieldName, singleLine) {
   if (!body || !fieldName) return '';
 
   var linhas = String(body).split(/\r?\n/);
-  var alvo = apresentacoes_normalizarComparacao_(fieldName);
+  var alvo = apresentacoes_normalizarComparacaoInbox_(fieldName);
   var valor = [];
   var capturando = false;
 
   function ehCabecalhoLinha(line) {
-    var l = apresentacoes_normalizarComparacao_(line);
+    var l = apresentacoes_normalizarComparacaoInbox_(line);
     return (
       l.indexOf('titulo:') === 0 ||
       l.indexOf('titulo :') === 0 ||
@@ -94,7 +78,7 @@ function apresentacoes_extrairCampoDoCorpo_(body, fieldName, singleLine) {
 
   for (var i = 0; i < linhas.length; i++) {
     var linhaOriginal = linhas[i];
-    var linhaNorm = apresentacoes_normalizarComparacao_(linhaOriginal);
+    var linhaNorm = apresentacoes_normalizarComparacaoInbox_(linhaOriginal);
 
     if (!capturando) {
       if (
@@ -224,7 +208,7 @@ function apresentacoes_getMapaEixos_() {
  * @param {*} value
  * @return {string}
  */
-function apresentacoes_normalizarComparacao_(value) {
+function apresentacoes_normalizarComparacaoInbox_(value) {
   return String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -242,7 +226,7 @@ function apresentacoes_normalizarComparacao_(value) {
  * @return {string}
  */
 function apresentacoes_interpretarEixo_(raw) {
-  var txt = apresentacoes_normalizarComparacao_(raw);
+  var txt = apresentacoes_normalizarComparacaoInbox_(raw);
   if (!txt) return '';
 
   var mapa = apresentacoes_getMapaEixos_();
@@ -250,21 +234,21 @@ function apresentacoes_interpretarEixo_(raw) {
   for (var i = 0; i < mapa.length; i++) {
     var item = mapa[i];
 
-    if (txt === apresentacoes_normalizarComparacao_(item.romano)) {
+    if (txt === apresentacoes_normalizarComparacaoInbox_(item.romano)) {
       return item.canonico;
     }
 
     for (var j = 0; j < item.aliases.length; j++) {
-      if (txt === apresentacoes_normalizarComparacao_(item.aliases[j])) {
+      if (txt === apresentacoes_normalizarComparacaoInbox_(item.aliases[j])) {
         return item.canonico;
       }
     }
 
-    if (txt === apresentacoes_normalizarComparacao_(item.canonico)) {
+    if (txt === apresentacoes_normalizarComparacaoInbox_(item.canonico)) {
       return item.canonico;
     }
 
-    if (apresentacoes_normalizarComparacao_(item.canonico).indexOf(txt) !== -1) {
+    if (apresentacoes_normalizarComparacaoInbox_(item.canonico).indexOf(txt) !== -1) {
       return item.canonico;
     }
   }
@@ -390,8 +374,7 @@ function apresentacoes_gravarTituloEixoNaLinha_(rowNumber, dados, confirmedAt) {
  * @param {GoogleAppsScript.Gmail.GmailThread} thread
  */
 function apresentacoes_marcarThreadTituloEixoProcessada_(thread) {
-  var label = apresentacoes_getLabelTituloEixoProcessado_();
-  thread.addLabel(label);
+  thread.addLabel(apresentacoes_getLabelTituloEixoProcessado_());
 }
 
 /**
@@ -402,7 +385,7 @@ function apresentacoes_buscarThreadsTituloEixo_() {
   var query =
     'in:anywhere newer_than:30d subject:"GEAPA | Envio de título e eixo da apresentação"';
 
-  return GmailApp.search(query, 0, 50);
+  return GEAPA_CORE.coreSearchThreads(query, 0, 50);
 }
 
 /**
@@ -528,6 +511,16 @@ function apresentacoes_processarInboxTituloEixo_() {
  * @return {Object[]}
  */
 function apresentacoes_getSecretaryContacts_() {
+  return GEAPA_CORE.coreGetCurrentOccupantsByEmailGroup('SECRETARIA').map(function(item) {
+    return {
+      nome: String(item.nome || item.memberName || '').trim(),
+      email: String(item.email || '').trim(),
+      funcaoAtual: String(item.publicName || item.roleName || '').trim()
+    };
+  }).filter(function(item) {
+    return item.email;
+  });
+
   var sheet = GEAPA_CORE.coreGetSheetByKey('MEMBERS_ATUAIS');
   var headerMap = apresentacoes_getHeaderMap_(sheet);
   var rows = apresentacoes_getDataRows_(sheet);
@@ -564,7 +557,7 @@ function apresentacoes_getSecretaryContacts_() {
     var nome = String(row[colNome] || '').trim();
     var email = String(row[colEmail] || '').trim();
     var funcao = String(row[colFuncaoAtual] || '').trim();
-    var funcaoNorm = apresentacoes_normalizarComparacao_(funcao);
+    var funcaoNorm = apresentacoes_normalizarComparacaoInbox_(funcao);
 
     var ehSecretaria = funcaoNorm.indexOf('secretari') !== -1;
 
