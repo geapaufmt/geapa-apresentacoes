@@ -19,7 +19,7 @@
  * @param {*} value
  * @return {Date|null}
  */
-function apresentacoes_toStartOfDay_(value) {
+function apresentacoes_toStartOfDayLocal_(value) {
   if (!value) return null;
 
   var d = value;
@@ -38,8 +38,8 @@ function apresentacoes_toStartOfDay_(value) {
  * @return {number|null}
  */
 function apresentacoes_diffDiasPara_(dataAlvo) {
-  var hoje = apresentacoes_toStartOfDay_(new Date());
-  var alvo = apresentacoes_toStartOfDay_(dataAlvo);
+  var hoje = apresentacoes_toStartOfDayLocal_(new Date());
+  var alvo = apresentacoes_toStartOfDayLocal_(dataAlvo);
 
   if (!hoje || !alvo) return null;
 
@@ -67,12 +67,8 @@ function apresentacoes_estaNaJanelaCobrancaTituloEixo_(item) {
  * @param {Object} item
  * @return {boolean}
  */
-function apresentacoes_temTituloEixoConfirmados_(item) {
-  return !!(
-    item.titulo &&
-    item.eixoPrincipal &&
-    item.dtHrConfirmacaoTituloEixo
-  );
+function apresentacoes_temTituloEixoConfirmadosOutbox_(item) {
+  return apresentacoes_temTituloEixoConfirmados_(item);
 }
 
 /**
@@ -83,8 +79,8 @@ function apresentacoes_temTituloEixoConfirmados_(item) {
 function apresentacoes_jaCobrouHojeTituloEixo_(item) {
   if (!item.dtCobrancaTituloEixo) return false;
 
-  var hoje = apresentacoes_toStartOfDay_(new Date());
-  var ultima = apresentacoes_toStartOfDay_(item.dtCobrancaTituloEixo);
+  var hoje = apresentacoes_toStartOfDayLocal_(new Date());
+  var ultima = apresentacoes_toStartOfDayLocal_(item.dtCobrancaTituloEixo);
 
   if (!hoje || !ultima) return false;
 
@@ -99,7 +95,7 @@ function apresentacoes_jaCobrouHojeTituloEixo_(item) {
 function apresentacoes_deveEnviarCobrancaTituloEixo_(item) {
   if (!apresentacoes_temIdentificacaoMinima_(item)) return false;
   if (!item.dataApresentacao) return false;
-  if (apresentacoes_temTituloEixoConfirmados_(item)) return false;
+  if (apresentacoes_temTituloEixoConfirmadosOutbox_(item)) return false;
   if (!apresentacoes_estaNaJanelaCobrancaTituloEixo_(item)) return false;
   if (apresentacoes_jaCobrouHojeTituloEixo_(item)) return false;
 
@@ -121,18 +117,8 @@ function apresentacoes_listarElegiveisCobrancaTituloEixo_() {
  * @param {*} value
  * @return {string}
  */
-function apresentacoes_formatarDataApresentacaoTexto_(value) {
-  if (!value) return '';
-
-  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
-    return Utilities.formatDate(
-      value,
-      Session.getScriptTimeZone(),
-      'dd/MM/yyyy'
-    );
-  }
-
-  return String(value).trim();
+function apresentacoes_formatarDataApresentacaoTextoOutbox_(value) {
+  return apresentacoes_formatarDataApresentacaoTexto_(value);
 }
 
 /**
@@ -141,7 +127,7 @@ function apresentacoes_formatarDataApresentacaoTexto_(value) {
  * @return {string}
  */
 function apresentacoes_buildAssuntoCobrancaTituloEixo_(item) {
-  var dataTxt = apresentacoes_formatarDataApresentacaoTexto_(item.dataApresentacao);
+  var dataTxt = apresentacoes_formatarDataApresentacaoTextoOutbox_(item.dataApresentacao);
   return 'GEAPA | Envio de título e eixo da apresentação' + (dataTxt ? ' - ' + dataTxt : '');
 }
 
@@ -152,7 +138,7 @@ function apresentacoes_buildAssuntoCobrancaTituloEixo_(item) {
  */
 function apresentacoes_buildHtmlCobrancaTituloEixo_(item) {
   var nome = item.nome || 'membro';
-  var dataTxt = apresentacoes_formatarDataApresentacaoTexto_(item.dataApresentacao);
+  var dataTxt = apresentacoes_formatarDataApresentacaoTextoOutbox_(item.dataApresentacao);
   var horario = item.horario || '';
   var local = item.local || '';
   var qtdJaEnviada = Number(item.qtdCobrancasTituloEixo || 0);

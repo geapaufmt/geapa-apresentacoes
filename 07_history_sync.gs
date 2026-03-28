@@ -146,7 +146,7 @@ function apresentacoes_estaAptaHistorico_(item) {
  * Lista apresentações aptas para sincronização no histórico.
  * @return {Object[]}
  */
-function apresentacoes_listarAptasHistorico_() {
+function apresentacoes_listarAptasHistoricoLocal_() {
   return apresentacoes_listarApresentacoesInternas_().filter(function(item) {
     return apresentacoes_estaAptaHistorico_(item);
   });
@@ -249,7 +249,7 @@ function apresentacoes_sincronizarItemNoHistoricoComContext_(item, ctx) {
 function apresentacoes_sincronizarHistorico_() {
   var runId = 'APRES-HIST-' + new Date().getTime();
   var startedAt = new Date();
-  var aptas = apresentacoes_listarAptasHistorico_();
+  var aptas = apresentacoes_listarAptasHistoricoLocal_();
   var ctx = apresentacoes_buildHistoricoContext_();
 
   var counters = {

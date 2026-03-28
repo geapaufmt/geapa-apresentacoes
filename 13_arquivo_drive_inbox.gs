@@ -14,12 +14,7 @@
  * @return {GoogleAppsScript.Gmail.GmailLabel}
  */
 function apresentacoes_getLabelArquivoProcessado_() {
-  var name = 'GEAPA/ArquivoApresentacaoProcessado';
-  var label = GmailApp.getUserLabelByName(name);
-  if (!label) {
-    label = GmailApp.createLabel(name);
-  }
-  return label;
+  return GEAPA_CORE.coreGetOrCreateLabel('GEAPA/ArquivoApresentacaoProcessado');
 }
 
 /**
@@ -29,15 +24,7 @@ function apresentacoes_getLabelArquivoProcessado_() {
  * @return {boolean}
  */
 function apresentacoes_threadJaProcessadaArquivo_(thread) {
-  var target = 'GEAPA/ArquivoApresentacaoProcessado';
-  var labels = thread.getLabels();
-
-  for (var i = 0; i < labels.length; i++) {
-    if (labels[i].getName() === target) {
-      return true;
-    }
-  }
-  return false;
+  return GEAPA_CORE.coreThreadHasLabel(thread, 'GEAPA/ArquivoApresentacaoProcessado');
 }
 
 /**
@@ -46,8 +33,7 @@ function apresentacoes_threadJaProcessadaArquivo_(thread) {
  * @param {GoogleAppsScript.Gmail.GmailThread} thread
  */
 function apresentacoes_marcarThreadArquivoProcessada_(thread) {
-  var label = apresentacoes_getLabelArquivoProcessado_();
-  thread.addLabel(label);
+  thread.addLabel(apresentacoes_getLabelArquivoProcessado_());
 }
 
 /**
@@ -196,7 +182,7 @@ function apresentacoes_buscarThreadsArquivo_() {
   var query =
     'newer_than:30d -in:trash -in:spam subject:"GEAPA | Envio do arquivo da apresentação em PDF"';
 
-  return GmailApp.search(query, 0, 50);
+  return GEAPA_CORE.coreSearchThreads(query, 0, 50);
 }
 
 /**
@@ -574,14 +560,12 @@ function apresentacoes_responderArquivoInvalido_(msg, item) {
   var subject = 'Re: ' + String(msg.getSubject() || 'GEAPA | Envio do arquivo da apresentação em PDF');
   var htmlBody = apresentacoes_buildHtmlRespostaArquivoInvalido_(item);
 
-  GmailApp.sendEmail(
-    item.email,
-    subject,
-    'Seu cliente de e-mail não suporta HTML.',
-    {
-      htmlBody: htmlBody
-    }
-  );
+  GEAPA_CORE.coreSendHtmlEmail({
+    to: item.email,
+    subject: subject,
+    body: 'Seu cliente de e-mail nao suporta HTML.',
+    htmlBody: htmlBody
+  });
 }
 
 /**
@@ -618,12 +602,10 @@ function apresentacoes_responderArquivoRecebidoComSucesso_(msg, item) {
   var subject = 'Re: ' + String(msg.getSubject() || 'GEAPA | Envio do arquivo da apresentação em PDF');
   var htmlBody = apresentacoes_buildHtmlRespostaArquivoRecebido_(item);
 
-  GmailApp.sendEmail(
-    item.email,
-    subject,
-    'Seu cliente de e-mail não suporta HTML.',
-    {
-      htmlBody: htmlBody
-    }
-  );
+  GEAPA_CORE.coreSendHtmlEmail({
+    to: item.email,
+    subject: subject,
+    body: 'Seu cliente de e-mail nao suporta HTML.',
+    htmlBody: htmlBody
+  });
 }

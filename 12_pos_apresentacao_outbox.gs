@@ -224,7 +224,7 @@ function apresentacoes_buildHtmlCobrancaArquivo_(item) {
  * @param {GoogleAppsScript.Gmail.GmailThread} thread
  * @return {Object}
  */
-function apresentacoes_processarThreadArquivo_(thread) {
+function apresentacoes_processarThreadArquivoLegacy_(thread) {
   var messages = thread.getMessages();
   if (!messages.length) {
     return { ok: false, action: 'skip', reason: 'thread_sem_mensagens' };
@@ -350,12 +350,12 @@ function apresentacoes_enviarCobrancaArquivoItem_(item, dryRun) {
   var htmlBody = apresentacoes_buildHtmlCobrancaArquivo_(item);
 
   if (!dryRun) {
-    GmailApp.sendEmail(
-      item.email,
-      subject,
-      'Seu cliente de e-mail não suporta HTML.',
-      { htmlBody: htmlBody }
-    );
+    GEAPA_CORE.coreSendHtmlEmail({
+      to: item.email,
+      subject: subject,
+      body: 'Seu cliente de e-mail nao suporta HTML.',
+      htmlBody: htmlBody
+    });
 
     apresentacoes_marcarCobrancaArquivoEnviada_(item.rowNumber);
   }

@@ -1,61 +1,53 @@
 /**
- * Leitura e normalização da planilha.
+ * Leitura e normalizacao da planilha.
  */
 
 /**
- * Retorna mapa cabeçalho -> índice.
+ * Retorna mapa cabecalho -> indice.
  * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
  * @return {Object<string, number>}
  */
 function apresentacoes_getHeaderMap_(sheet) {
-  var lastColumn = sheet.getLastColumn();
-  if (lastColumn < 1) {
-    throw new Error('A aba está vazia ou sem cabeçalhos.');
+  var data = GEAPA_CORE.coreReadSheetData(sheet, { headerRow: 1 });
+  if (!data.headers.length) {
+    throw new Error('A aba esta vazia ou sem cabecalhos.');
   }
 
-  var headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
-  var map = {};
-
-  headers.forEach(function(header, idx) {
-    if (header) {
-      map[String(header).trim()] = idx;
-    }
+  return GEAPA_CORE.coreBuildHeaderIndexMap(data.headers, {
+    normalize: false,
+    oneBased: false,
+    keepFirst: true
   });
-
-  return map;
 }
 
 /**
- * Lê todas as linhas úteis de uma aba.
+ * Le todas as linhas uteis de uma aba.
  * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet
  * @return {Array[]}
  */
 function apresentacoes_getDataRows_(sheet) {
-  var lastRow = sheet.getLastRow();
-  var lastColumn = sheet.getLastColumn();
-
-  if (lastRow < 2 || lastColumn < 1) {
-    return [];
-  }
-
-  return sheet.getRange(2, 1, lastRow - 1, lastColumn).getValues();
+  return GEAPA_CORE.coreReadSheetData(sheet, {
+    headerRow: 1,
+    startRow: 2
+  }).rows;
 }
 
 /**
- * Lê valor por nome do cabeçalho.
+ * Le valor por nome do cabecalho.
  * @param {Array} row
  * @param {Object<string, number>} headerMap
  * @param {string} headerName
  * @return {*}
  */
 function apresentacoes_getCellByHeader_(row, headerMap, headerName) {
-  var idx = headerMap[headerName];
-  if (idx === undefined) return '';
-  return row[idx];
+  return GEAPA_CORE.coreGetCellByHeader(row, headerMap, headerName, {
+    normalize: false,
+    defaultValue: ''
+  });
 }
 
 /**
- * Normaliza uma linha da aba de processamento em objeto canônico.
+ * Normaliza uma linha da aba de processamento em objeto canonico.
  * @param {Array} row
  * @param {Object<string, number>} headerMap
  * @param {number} rowNumber
@@ -102,7 +94,7 @@ function apresentacoes_normalizarLinhaProcessamento_(row, headerMap, rowNumber) 
 }
 
 /**
- * Lista apresentações internas normalizadas.
+ * Lista apresentacoes internas normalizadas.
  * @return {Object[]}
  */
 function apresentacoes_listarApresentacoesInternas_() {
